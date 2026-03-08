@@ -14,20 +14,14 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            goos: linux
-            goarch: amd64
-          - os: ubuntu-latest
-            goos: linux
-            goarch: arm64
+            platform: linux
+            arch: amd64
           - os: macos-latest
-            goos: darwin
-            goarch: amd64
-          - os: macos-latest
-            goos: darwin
-            goarch: arm64
+            platform: darwin
+            arch: arm64
           - os: windows-latest
-            goos: windows
-            goarch: amd64
+            platform: windows
+            arch: amd64
 
     runs-on: ${{ matrix.os }}
 
@@ -43,31 +37,25 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install -y libasound2-dev
 
-      - name: Install macOS dependencies
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew install pkg-config || true
-
       - name: Download dependencies
         run: go mod download
 
-      - name: Build binary
+      - name: Build
         env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: 1
+        shell: bash
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
-          BINARY_NAME="say-mi-${{ matrix.goos }}-${{ matrix.goarch }}"
-          if [ "${{ matrix.goos }}" = "windows" ]; then
+          BINARY_NAME="say-mi-${{ matrix.platform }}-${{ matrix.arch }}"
+          if [ "${{ matrix.platform }}" = "windows" ]; then
             BINARY_NAME="${BINARY_NAME}.exe"
           fi
-          go build -ldflags="-s -w -X main.Version=$VERSION" -o "dist/${BINARY_NAME}" .
+          go build -ldflags="-s -w -X main.Version=$VERSION" -o "dist/$BINARY_NAME" .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: say-mi-${{ matrix.goos }}-${{ matrix.goarch }}
+          name: say-mi-${{ matrix.platform }}-${{ matrix.arch }}
           path: dist/*
 
   release:
@@ -83,11 +71,13 @@ jobs:
           path: dist
           merge-multiple: true
 
+      - name: List files
+        run: ls -la dist/
+
       - name: Generate SHA256 checksums
         run: |
           cd dist
           sha256sum * > checksums.txt
-          ls -la
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
