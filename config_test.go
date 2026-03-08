@@ -16,7 +16,7 @@ func TestLoadConfig(t *testing.T) {
 		{
 			name: "valid config with fallback",
 			content: `fallback: "audio/error.mp3"
-categories:
+voices:
   hello:
     - "audio/hello.mp3"
 `,
@@ -25,7 +25,7 @@ categories:
 		},
 		{
 			name: "valid config without fallback",
-			content: `categories:
+			content: `voices:
   hello:
     - "audio/hello.mp3"
 `,
@@ -34,7 +34,7 @@ categories:
 		},
 		{
 			name: "empty config",
-			content: `categories: {}
+			content: `voices: {}
 `,
 			wantErr:  false,
 			fallback: "",
@@ -76,7 +76,11 @@ func TestLoadConfig_FileNotFound(t *testing.T) {
 }
 
 func TestLoadConfig_RealFile(t *testing.T) {
-	// Test loading the actual config.yaml
+	// Test loading the actual config.yaml if it exists
+	if _, err := os.Stat("config.yaml"); os.IsNotExist(err) {
+		t.Skip("config.yaml not found, skipping")
+	}
+
 	config, err := LoadConfig("config.yaml")
 	if err != nil {
 		t.Fatalf("Failed to load config.yaml: %v", err)
@@ -86,14 +90,14 @@ func TestLoadConfig_RealFile(t *testing.T) {
 		t.Error("Expected fallback to be set in config.yaml")
 	}
 
-	if config.Categories == nil {
-		t.Error("Expected categories to be set in config.yaml")
+	if config.Voices == nil {
+		t.Error("Expected voices to be set in config.yaml")
 	}
 }
 
 func TestFindCategory(t *testing.T) {
 	content := `fallback: "test.mp3"
-categories:
+voices:
   hello:
     - "test.mp3"
   male:
@@ -212,6 +216,11 @@ categories:
 }
 
 func TestFindCategory_RealConfig(t *testing.T) {
+	// Skip if config.yaml doesn't exist
+	if _, err := os.Stat("config.yaml"); os.IsNotExist(err) {
+		t.Skip("config.yaml not found, skipping")
+	}
+
 	config, err := LoadConfig("config.yaml")
 	if err != nil {
 		t.Fatalf("Failed to load config.yaml: %v", err)
@@ -227,26 +236,17 @@ func TestFindCategory_RealConfig(t *testing.T) {
 	}
 
 	// Test nested category
-	files, exists = config.FindCategory("male.sato.hello")
+	files, exists = config.FindCategory("kyoko.say.greeting")
 	if !exists {
-		t.Error("FindCategory(\"male.sato.hello\") should exist")
+		t.Error("FindCategory(\"kyoko.say.greeting\") should exist")
 	}
 	if len(files) == 0 {
-		t.Error("FindCategory(\"male.sato.hello\") should have files")
-	}
-
-	// Test deep nested category
-	files, exists = config.FindCategory("female.sayako.email")
-	if !exists {
-		t.Error("FindCategory(\"female.sayako.email\") should exist")
-	}
-	if len(files) == 0 {
-		t.Error("FindCategory(\"female.sayako.email\") should have files")
+		t.Error("FindCategory(\"kyoko.say.greeting\") should have files")
 	}
 }
 
-func TestFindCategory_EmptyCategories(t *testing.T) {
-	content := `categories: {}`
+func TestFindCategory_EmptyVoices(t *testing.T) {
+	content := `voices: {}`
 
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "config.yaml")
@@ -261,7 +261,7 @@ func TestFindCategory_EmptyCategories(t *testing.T) {
 
 	_, exists := config.FindCategory("anything")
 	if exists {
-		t.Error("FindCategory() should return false for empty categories")
+		t.Error("FindCategory() should return false for empty voices")
 	}
 }
 

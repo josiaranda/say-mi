@@ -9,8 +9,8 @@ import (
 
 // Config represents the YAML configuration structure
 type Config struct {
-	Fallback   string      `yaml:"fallback"`
-	Categories interface{} `yaml:"categories"` // Can be nested map or flat map
+	Fallback string      `yaml:"fallback"`
+	Voices   interface{} `yaml:"voices"` // Can be nested map or flat map
 }
 
 // LoadConfig reads and parses the YAML config file from the given path
@@ -29,30 +29,37 @@ func LoadConfig(path string) (*Config, error) {
 }
 
 // FindCategory traverses the nested config using dot notation
-// e.g., "female.sayako.email" navigates through categories["female"]["sayako"]["email"]
+// e.g., "kyoko.greeting" navigates through voices["kyoko"]["greeting"]
 func (c *Config) FindCategory(path string) ([]string, bool) {
 	parts := strings.Split(path, ".")
 	if len(parts) == 0 {
 		return nil, false
 	}
 
-	current := c.Categories
+	current := c.Voices
+	DebugLog("FindCategory: starting with path '%s', parts=%v", path, parts)
 
 	for i, part := range parts {
 		// Try to navigate as a map
 		asMap, ok := current.(map[string]interface{})
 		if !ok {
+			DebugLog("FindCategory: part '%s' is not a map, type=%T", part, current)
 			return nil, false
 		}
 
 		value, exists := asMap[part]
 		if !exists {
+			DebugLog("FindCategory: part '%s' not found in map, available keys: %v", part, getMapKeys(asMap))
 			return nil, false
 		}
 
+		DebugLog("FindCategory: part '%s' found, value type=%T", part, value)
+
 		// Check if this is the final part (should be a list of strings)
 		if i == len(parts)-1 {
-			return extractStringSlice(value)
+			result, ok := extractStringSlice(value)
+			DebugLog("FindCategory: extractStringSlice returned %d items, ok=%v", len(result), ok)
+			return result, ok
 		}
 
 		// Continue navigating
@@ -60,6 +67,15 @@ func (c *Config) FindCategory(path string) ([]string, bool) {
 	}
 
 	return nil, false
+}
+
+// getMapKeys returns the keys of a map for debugging
+func getMapKeys(m map[string]interface{}) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }
 
 // extractStringSlice converts an interface{} to []string if possible
