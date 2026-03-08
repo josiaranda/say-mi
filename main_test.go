@@ -19,7 +19,7 @@ func TestMainIntegration(t *testing.T) {
 	}
 
 	// Create test config (no fallback so missing categories actually fail)
-	testConfig := `categories:
+	testConfig := `voices:
   hello:
     - "test.mp3"
   male:
@@ -75,8 +75,8 @@ func TestMainIntegration(t *testing.T) {
 			wantExit: 1,
 		},
 		{
-			name:     "nested category found",
-			args:     []string{"-c", configPath, "male.sato.hello"},
+			name: "nested category found",
+			args: []string{"-c", configPath, "male.sato.hello"},
 			// Note: Will try to play audio, which may fail in headless env
 			// But category lookup should succeed
 			wantExit: 0,
@@ -134,7 +134,7 @@ func TestHelpFlag(t *testing.T) {
 		"category",
 		"-config",
 		"-error-exit",
-		"female.sayako.email",
+		"kyoko.greeting",
 	}
 
 	for _, expected := range expectedStrings {

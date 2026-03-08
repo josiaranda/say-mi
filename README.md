@@ -40,15 +40,18 @@ sudo mv say-mi /usr/local/bin/
 
 ```bash
 # Basic usage - plays random audio from category
-say-mi hello
+say-mi greeting
 
-# Nested categories with dot notation
-say-mi male.sato.hello
-say-mi female.sayako.email
+# Nested categories with dot notation (voice.say.category)
+say-mi kyoko.say.greeting
+say-mi jamie.say.permission
 
 # Custom config file
-say-mi -c ./custom.yaml hello
-say-mi --config ./sounds.yaml permission
+say-mi -c ./voices.yaml kyoko.say.greeting
+say-mi --config ./voices.yaml jamie.say.goodbye
+
+# Verbose mode for debugging
+say-mi --verbose kyoko.say.greeting
 
 # Exit with error code when category not found
 say-mi -e nonexistent      # exits 1
@@ -59,7 +62,6 @@ say-mi nonexistent         # exits 0, silent
 
 # Show version
 say-mi --version
-say-mi -v
 ```
 
 ## Updating
@@ -88,6 +90,7 @@ brew reinstall josiaranda/say-mi/say-mi
 |------|-------------|---------|
 | `-c, --config` | Path to YAML config file | `./config.yaml` |
 | `-e, --error-exit` | Exit with code 1 on category/audio not found | `false` |
+| `--verbose` | Enable verbose/debug output | `false` |
 
 ## Exit Codes
 
@@ -98,45 +101,53 @@ brew reinstall josiaranda/say-mi/say-mi
 
 ## Config Format
 
-Create a `config.yaml` file:
+Create a `voices.yaml` file:
 
 ```yaml
 # Optional: played when category not found
 fallback: "audio/error/not-found.mp3"
 
-categories:
-  # Flat categories
-  hello:
-    - "audio/hello/hello-1.mp3"
-    - "audio/hello/hello-2.wav"
+voices:
+  kyoko:
+    voice_id: "elevenlabs-voice-id"  # optional, ignored by say-mi
+    say:
+      greeting:
+        - text: "What are we working on today?"
+          audio: "audio/kyoko/greeting/0.mp3"
+        - text: "Good to see you again."
+          audio: "audio/kyoko/greeting/1.mp3"
+      permission:
+        - text: "Is this okay?"
+          audio: "audio/kyoko/permission/0.mp3"
+      goodbye:
+        - text: "See you later!"
+          audio: "audio/kyoko/goodbye/0.mp3"
 
-  permission:
-    - "audio/permission/may-i.mp3"
-
-  # Nested categories (use dot notation)
-  male:
-    sato:
-      hello:
-        - "audio/male/sato/hello-1.mp3"
-        - "audio/male/sato/hello-2.mp3"
-      email:
-        - "audio/male/sato/email.mp3"
-    tanaka:
-      hello:
-        - "audio/male/tanaka/hello.mp3"
-
-  female:
-    sayako:
-      hello:
-        - "audio/female/sayako/hello.mp3"
-      email:
-        - "audio/female/sayako/email.mp3"
+  jamie:
+    voice_id: "another-voice-id"
+    say:
+      greeting:
+        - text: "Hey, what's up?"
+          audio: "audio/jamie/greeting/0.mp3"
+      permission:
+        - text: "Should I go ahead?"
+          audio: "audio/jamie/permission/0.mp3"
 ```
 
-Access nested categories with dot notation:
+Access categories with dot notation (`voice.say.category`):
 ```bash
-say-mi male.sato.hello      # Plays random file from male.sato.hello
-say-mi female.sayako.email  # Plays from female.sayako.email
+say-mi kyoko.say.greeting      # Plays random file from kyoko's greetings
+say-mi jamie.say.permission    # Plays from jamie's permissions
+```
+
+You can also use a simpler format without `text` fields:
+```yaml
+voices:
+  kyoko:
+    say:
+      greeting:
+        - "audio/kyoko/greeting/0.mp3"
+        - "audio/kyoko/greeting/1.mp3"
 ```
 
 ## Supported Audio Formats
