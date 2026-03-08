@@ -63,13 +63,24 @@ func (c *Config) FindCategory(path string) ([]string, bool) {
 }
 
 // extractStringSlice converts an interface{} to []string if possible
+// Handles: []string, []interface{} of strings, or []interface{} of objects with "audio" field
 func extractStringSlice(value interface{}) ([]string, bool) {
 	// Try as []interface{} (how YAML unmarshals arrays)
 	if slice, ok := value.([]interface{}); ok {
 		result := make([]string, 0, len(slice))
 		for _, item := range slice {
+			// Try as string
 			if str, ok := item.(string); ok {
 				result = append(result, str)
+				continue
+			}
+			// Try as map with "audio" field (for ai_voices.yaml structure)
+			if m, ok := item.(map[string]interface{}); ok {
+				if audio, exists := m["audio"]; exists {
+					if audioStr, ok := audio.(string); ok && audioStr != "" {
+						result = append(result, audioStr)
+					}
+				}
 			}
 		}
 		if len(result) > 0 {

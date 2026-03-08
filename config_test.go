@@ -308,6 +308,33 @@ func TestExtractStringSlice(t *testing.T) {
 			want:   nil,
 			wantOk: false,
 		},
+		{
+			name: "[]interface{} with objects containing audio field",
+			input: []interface{}{
+				map[string]interface{}{"text": "Hello", "audio": "kyoko/say/greeting/0.mp3"},
+				map[string]interface{}{"text": "Hi", "audio": "kyoko/say/greeting/1.mp3"},
+			},
+			want:   []string{"kyoko/say/greeting/0.mp3", "kyoko/say/greeting/1.mp3"},
+			wantOk: true,
+		},
+		{
+			name: "[]interface{} with mixed objects and strings",
+			input: []interface{}{
+				"plain_string.mp3",
+				map[string]interface{}{"text": "Hello", "audio": "obj.mp3"},
+			},
+			want:   []string{"plain_string.mp3", "obj.mp3"},
+			wantOk: true,
+		},
+		{
+			name: "[]interface{} with objects missing or empty audio",
+			input: []interface{}{
+				map[string]interface{}{"text": "No audio"},
+				map[string]interface{}{"text": "Empty audio", "audio": ""},
+			},
+			want:   nil,
+			wantOk: false,
+		},
 	}
 
 	for _, tt := range tests {
