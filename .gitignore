@@ -1,0 +1,36 @@
+# Binaries
+say-mi
+say-mi-*
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Build artifacts
+/bin/
+/dist/
+
+# Go
+*.test
+*.out
+go.work
+go.work.sum
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Audio files (optional - uncomment if you don't want to track audio)
+# *.mp3
+# *.wav
+# *.ogg
+# *.flac
+# audio/
