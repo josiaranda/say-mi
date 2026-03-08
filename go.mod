@@ -1,6 +1,6 @@
 module say-mi
 
-go 1.24
+go 1.21
 
 require (
 	github.com/gopxl/beep v1.4.1
